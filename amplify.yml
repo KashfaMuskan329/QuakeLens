@@ -3,10 +3,18 @@ frontend:
   phases:
     build:
       commands:
-        - echo "Static zero-dependency QuakeLens frontend"
+        - echo "Building QuakeLens"
         - mkdir -p dist
-        - cp index.html config.js dist/
+        - cp index.html dist/
         - cp -r assets data dist/
+        - |
+          cat > dist/config.js <<EOF
+          window.QUAKELENS_CONFIG = {
+            awsRegion: 'ap-south-1',
+            amazonLocationApiKey: '${AMAZON_LOCATION_API_KEY}',
+            dataApiUrl: 'https://aa84xv55kl.execute-api.ap-south-1.amazonaws.com/earthquakes'
+          };
+          EOF
   artifacts:
     baseDirectory: dist
     files:
