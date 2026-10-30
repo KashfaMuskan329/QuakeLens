@@ -22,3 +22,4 @@ infra/*.zip
 
 # Local configuration containing API keys
 config.js
+infra/response.json
