@@ -1,0 +1,24 @@
+# Terraform state and credentials
+**/.terraform/
+**/*.tfstate
+**/*.tfstate.*
+**/terraform.tfvars
+**/*.auto.tfvars
+**/crash.log
+**/crash.*.log
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# AWS credentials
+.aws/
+*.pem
+*.key
+
+# Generated Lambda packages
+infra/*.zip
+
+# Local configuration containing API keys
+config.js

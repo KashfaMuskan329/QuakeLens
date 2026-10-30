@@ -1,0 +1,15 @@
+version: 1
+frontend:
+  phases:
+    build:
+      commands:
+        - echo "Static zero-dependency QuakeLens frontend"
+        - mkdir -p dist
+        - cp index.html config.js dist/
+        - cp -r assets data dist/
+  artifacts:
+    baseDirectory: dist
+    files:
+      - '**/*'
+  cache:
+    paths: []

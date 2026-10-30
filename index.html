@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#090d18">
+  <meta name="description" content="QuakeLens: explore recorded earthquakes and city proximity through a geospatial intelligence dashboard powered by Amazon Location Service and AWS.">
+  <title>QuakeLens · Earth, in perspective</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/maplibre-gl@5.9.0/dist/maplibre-gl.css" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css">
+  <script src="https://unpkg.com/maplibre-gl@5.9.0/dist/maplibre-gl.js" defer></script>
+  <script src="config.js" defer></script>
+  <script type="module" src="assets/app.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="rail" aria-label="QuakeLens navigation">
+      <div class="rail-logo" title="QuakeLens"><svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><circle cx="20" cy="20" r="16" stroke="currentColor" stroke-width="1.5" opacity=".5"/><circle cx="20" cy="20" r="10" stroke="currentColor" stroke-width="1.5" opacity=".7"/><path d="M6 23h9l4-11 5 16 3-7h7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="rail-line"></div>
+      <button class="rail-icon active" title="Explore map" aria-label="Explore map" id="nav-map"><span>◈</span></button>
+      <button class="rail-icon" title="Jump to insights" aria-label="Jump to insights" id="nav-insights"><span>▤</span></button>
+      <button class="rail-icon" title="About the data" aria-label="About the data" id="nav-about"><span>ⓘ</span></button>
+      <div class="rail-bottom"><div class="rail-aws">aws<br><small>built on</small></div><div class="rail-dot"></div></div>
+    </aside>
+
+    <div class="workspace">
+      <header class="topbar">
+        <div class="brand"><span class="brand-symbol">◉</span><span>QUAKE<span class="brand-accent">LENS</span></span><span class="brand-divider"></span><span class="brand-caption">THE PLANET, EXPLAINED</span></div>
+        <div class="top-right"><span class="top-edition">GLOBAL SEISMIC EXPLORER <b> / 01</b></span><span class="top-separator"></span><span class="online"><span class="online-pulse"></span><span id="connection-state">CONNECTING</span></span><button class="icon-btn mobile-filter" id="mobile-filters" title="Toggle filters" aria-label="Toggle filters">☷</button></div>
+      </header>
+
+      <main>
+        <section class="intro">
+          <div class="intro-text"><div class="eyebrow"><span class="eyebrow-stripe"></span>INTERACTIVE SEISMIC INTELLIGENCE <span class="eyebrow-counter">— 2026</span></div><h1>The earth moves.<br><em>See the story.</em></h1><p>Explore where our planet shifts, how seismic activity unfolds over time, and what the data reveals around the cities we call home.</p></div>
+          <div class="intro-actions"><button id="tour-btn" class="outline-action"><span class="play-small">▶</span> Explore the story</button><div class="updated-note">DATA SOURCE <span>USGS EARTHQUAKE CATALOG</span><small id="last-updated">Waiting for first update</small><button id="data-retry" class="data-retry" type="button" title="Retry the current USGS feed and show error details if unavailable">↻ RETRY LIVE DATA</button></div></div>
+        </section>
+
+        <section class="stats" aria-label="Earthquake summary metrics">
+          <div class="stat-card"><div class="stat-head">RECORDED EVENTS <span class="stat-mini">01 / 04</span></div><div class="stat-main"><strong id="total-count">—</strong><span class="stat-symbol">◉</span></div><div class="stat-foot" id="event-range">Selected time window</div></div>
+          <div class="stat-card"><div class="stat-head">STRONGEST MAGNITUDE <span class="stat-mini">02 / 04</span></div><div class="stat-main"><strong id="max-mag">—</strong><span class="stat-symbol mag-sym">↗</span></div><div class="stat-foot" id="strongest-caption">Richter-style magnitude (Mw / other)</div></div>
+          <div class="stat-card"><div class="stat-head">AVERAGE DEPTH <span class="stat-mini">03 / 04</span></div><div class="stat-main"><strong id="average-depth">—</strong><span class="stat-unit">KM</span></div><div class="stat-foot">Below Earth's surface · selected events</div></div>
+          <div class="stat-card stat-card-focus"><div class="stat-head">CITY PROXIMITY <span class="stat-mini">04 / 04</span></div><div class="stat-main"><strong id="city-count">—</strong><span class="stat-symbol">◎</span></div><div class="stat-foot" id="city-caption">Within 500 km of Islamabad</div></div>
+        </section>
+
+        <section class="explorer" aria-label="Interactive seismic map explorer">
+          <div class="explorer-bar"><div class="section-label"><span class="section-kicker">01</span><span>THE EXPLORER</span><span class="section-line"></span><span class="section-subtitle">A map of motion</span></div><div class="explorer-meta"><span class="live-indicator"></span><span id="data-status">LOADING LIVE EVENTS</span><span class="meta-divider"></span><span id="showing-count">— PLOTTED</span></div></div>
+          <div class="explorer-layout">
+            <aside class="filter-panel" id="filter-panel" aria-label="Map filters">
+              <div class="panel-title"><span>EXPLORE YOUR WORLD</span><span class="small-squares">▦</span></div>
+              <div class="form-block"><label for="city-select">FOCUS ON A CITY <span class="question" title="Distance calculations use great-circle distances from city center, not measured shaking or risk.">?</span></label><div class="select-holder"><span class="input-icon">⌖</span><select id="city-select"><option value="islamabad">Islamabad, Pakistan</option><option value="lahore">Lahore, Pakistan</option><option value="karachi">Karachi, Pakistan</option><option value="peshawar">Peshawar, Pakistan</option><option value="quetta">Quetta, Pakistan</option><option value="muzaffarabad">Muzaffarabad, Pakistan</option><option value="delhi">New Delhi, India</option><option value="kathmandu">Kathmandu, Nepal</option><option value="tokyo">Tokyo, Japan</option><option value="istanbul">Istanbul, Türkiye</option><option value="losangeles">Los Angeles, USA</option><option value="jakarta">Jakarta, Indonesia</option><option value="reykjavik">Reykjavik, Iceland</option></select></div></div>
+              <div class="form-block"><label for="radius-select">SEARCH RADIUS</label><div class="segmented" id="radius-group" role="group" aria-label="City search radius"><button data-radius="250">250 <small>KM</small></button><button data-radius="500" class="selected">500 <small>KM</small></button><button data-radius="1000">1K <small>KM</small></button></div></div>
+              <div class="form-block"><div class="range-heading"><label for="min-mag">MINIMUM MAGNITUDE</label><strong id="min-mag-value">M 2.5+</strong></div><input type="range" min="2.5" max="7.0" value="2.5" step="0.5" id="min-mag"><div class="range-ticks"><span>2.5</span><span>4.0</span><span>5.5</span><span>7.0</span></div></div>
+              <div class="form-block"><label for="time-filter">TIME WINDOW</label><div class="select-holder"><span class="input-icon">◷</span><select id="time-filter"><option value="30">Last 30 days</option><option value="7">Last 7 days</option><option value="1">Last 24 hours</option></select></div></div>
+              <div class="form-block"><label>MAP VIEW</label><div class="view-switch"><button class="selected" data-view="global" id="view-global">◉ &nbsp; All events</button><button data-view="radius" id="view-radius">◎ &nbsp; City lens</button></div></div>
+              <div class="filter-message" id="filter-message"><span>✧</span><p>Switch to <strong>City lens</strong> to explore earthquakes near the selected city.</p></div>
+              <button id="reset-btn" class="reset-btn">↻ &nbsp; RESET EXPLORER</button>
+            </aside>
+
+            <div class="map-wrap">
+              <div id="map" role="application" aria-label="Interactive earthquake map"></div>
+              <div class="map-grid-overlay" aria-hidden="true"></div>
+              <div class="map-top-left"><div class="map-chip"><span class="circle-dot"></span><span id="map-chip-text">GLOBAL VIEW</span></div></div>
+              <div class="map-top-right"><button id="map-style" class="map-action" title="Toggle basemap style">◐ <span>MAP STYLE</span></button><button id="map-recenter" class="map-action" title="Center on selected city">⌖ <span>RECENTER</span></button></div>
+              <div class="replay-bar" id="replay-bar"><button class="replay-play" id="replay-play" aria-label="Play timeline">▶</button><div class="replay-info"><strong>TIME TRAVEL</strong><span id="replay-label">Full 30-day window</span></div><input type="range" id="replay-slider" min="0" max="30" step="1" value="30" aria-label="Timeline day"><button class="replay-reset" id="replay-reset" title="Reset timeline" aria-label="Reset timeline">↻</button></div>
+              <div class="map-legend"><div class="legend-label">MAGNITUDE SCALE</div><div class="legend-row"><span class="legend-item"><i class="legend-dot d-1"></i>2.5–3.9</span><span class="legend-item"><i class="legend-dot d-2"></i>4.0–5.9</span><span class="legend-item"><i class="legend-dot d-3"></i>6.0+</span></div></div>
+              <div class="map-coords" id="map-coords">35.69° N · 51.38° E</div>
+              <div class="map-fallback" id="map-fallback" hidden><div class="fallback-icon">◎</div><strong>Map couldn't load</strong><p id="map-fallback-msg">Check your connection or Amazon Location settings.</p><button id="map-retry">Retry map</button></div>
+              <div class="map-tip" id="map-tip">CLICK ANY EARTHQUAKE TO INSPECT <button title="Dismiss" id="tip-close">×</button></div>
+            </div>
+
+            <aside class="feed-panel" aria-label="Seismic activity feed"><div class="feed-header"><div><span class="feed-eyebrow">THE EARTH, AS RECORDED</span><h2>Latest activity<span class="accent-dot">.</span></h2></div><div class="feed-count" id="feed-count">00</div></div><div class="feed-description">Events matching your current filters. Select one to explore its details.</div><div class="feed-items" id="feed-items"><div class="feed-loading">Retrieving USGS records…</div></div><button class="feed-more" id="feed-more">SHOW MORE EVENTS <span>↗</span></button></aside>
+          </div>
+        </section>
+
+        <section class="insights" id="insights"><div class="section-label insights-label"><span class="section-kicker">02</span><span>THE BIGGER PICTURE</span><span class="section-line"></span><span class="section-subtitle">Patterns behind the points</span></div><div class="insights-layout"><div class="trend-card"><div class="card-top"><div><div class="small-label">SEISMIC FREQUENCY</div><h2>Activity over time<span class="accent-dot">.</span></h2></div><span class="chart-tag">DAILY EVENT COUNT</span></div><div id="trend-chart" class="trend-chart" role="img" aria-label="Daily earthquake activity bar chart"></div><div class="trend-foot"><span id="trend-date-start">—</span><span>HOVER BARS TO INSPECT</span><span id="trend-date-end">—</span></div></div><div class="city-card"><div class="small-label">CITY LENS / GEO-DISTANCE</div><h2>Closer to home<span class="accent-dot">.</span></h2><p>Understand recorded activity around a city. Distances are computed from epicenters using the Haversine formula.</p><div class="city-fact"><div class="city-fact-label">NEAREST RECORDED EVENT</div><div class="city-fact-value" id="nearest-distance">—</div><small id="nearest-caption">Select a city to compare proximity</small></div><div class="city-bottom"><span id="city-analysis-label">ISLAMABAD / 500 KM</span><button id="city-activate">OPEN CITY LENS ↗</button></div></div></div></section>
+
+        <section class="comparison" id="comparison"><div class="section-label insights-label"><span class="section-kicker">03</span><span>THE CITY COMPARISON LAB</span><span class="section-line"></span><span class="section-subtitle">Same radius. Different stories.</span></div><div class="comparison-shell"><div class="compare-heading"><div><div class="small-label">A DIFFERENT PERSPECTIVE ON PROXIMITY</div><h2>Two cities. <em>One dataset.</em></h2><p>Use the same observation window and search radius to compare reported earthquake activity—not a forecast or risk ranking.</p></div><div class="compare-controls"><label for="compare-radius">SHARED RADIUS</label><select id="compare-radius"><option value="250">250 km</option><option value="500">500 km</option><option value="1000" selected>1,000 km</option></select></div></div><div class="compare-layout"><div class="compare-city"><div class="compare-title"><label for="compare-left">CITY A</label><select id="compare-left"></select></div><div class="compare-number"><strong id="compare-left-count">—</strong><span>RECORDED EVENTS</span></div><div id="compare-left-bars" class="compare-bars"></div><div class="compare-stats"><div>STRONGEST<br><strong id="compare-left-max">—</strong></div><div>NEAREST<br><strong id="compare-left-nearest">—</strong></div></div><button id="compare-left-open">EXPLORE ON MAP ↗</button></div><div class="compare-vs">VS</div><div class="compare-city"><div class="compare-title"><label for="compare-right">CITY B</label><select id="compare-right"></select></div><div class="compare-number"><strong id="compare-right-count">—</strong><span>RECORDED EVENTS</span></div><div id="compare-right-bars" class="compare-bars"></div><div class="compare-stats"><div>STRONGEST<br><strong id="compare-right-max">—</strong></div><div>NEAREST<br><strong id="compare-right-nearest">—</strong></div></div><button id="compare-right-open">EXPLORE ON MAP ↗</button></div></div><div class="compare-foot" id="compare-foot">Based on the selected time window and minimum magnitude. City radius: 1,000 km.</div></div></section>
+
+        <section class="story"><div class="story-index">04 / A NEW WAY TO SEE THE EARTH</div><div class="story-main"><h2>Every dot is a moment.<br><span>Every pattern tells a story.</span></h2><p>Earthquake records are more than numbers. QuakeLens turns public scientific data into a visual story anyone can navigate—without confusing proximity with a prediction of danger.</p><a href="https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php" target="_blank" rel="noopener noreferrer">EXPLORE THE ORIGINAL DATA <span>↗</span></a></div></section>
+      </main>
+      <footer class="footer"><div class="footer-brand">◉ &nbsp; QUAKELENS <span>— EARTH, IN PERSPECTIVE</span></div><div>USGS EARTHQUAKE DATA · AMAZON LOCATION SERVICE (WHEN CONFIGURED)</div><div>BUILT FOR AWS MAP IT CHALLENGE · 2026</div></footer>
+    </div>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div class="modal" id="about-modal" hidden><div class="modal-backdrop" id="modal-backdrop"></div><div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modal-title"><button id="modal-close" class="modal-close" aria-label="Close">✕</button><div class="small-label">THE METHOD BEHIND THE MAP</div><h2 id="modal-title">About QuakeLens</h2><p>QuakeLens visualizes public USGS earthquake observations. Each dot reflects a published event with its reported magnitude, location, timestamp and depth. Data may be revised by USGS.</p><p><strong>City Lens</strong> calculates straight-line great-circle distances between the chosen city center and reported epicenters. It does not model intensity, shaking, vulnerability, seismic hazard or forecast earthquakes.</p><p><strong>Live feed</strong> loads USGS 30-day magnitude 2.5+ data, or an AWS Lambda/S3 cached equivalent if configured. When unavailable, the app explicitly labels its bundled USGS reference snapshot.</p><p>Built with Amazon Location Service (configured deployments), MapLibre GL JS, AWS Lambda, Amazon S3, EventBridge and API Gateway. <a href="https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php" target="_blank" rel="noopener">Read USGS source details ↗</a></p></div></div>
+</body>
+</html>
